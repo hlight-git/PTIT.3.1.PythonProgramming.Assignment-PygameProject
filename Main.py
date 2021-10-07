@@ -6,6 +6,7 @@ class Game:
 	def __init__(self) -> None:
 		pygame.init()
 		self.screen = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
+		pygame.display.set_caption('2m')
 		self.clock = pygame.time.Clock()
 		self.running = True
 
@@ -15,7 +16,8 @@ class Game:
 		self.enemies = pygame.sprite.LayeredUpdates()
 		self.attacks = pygame.sprite.LayeredUpdates()
 
-		self.player = Player(self, 1, 2)
+		self.background = Background(self, 0, 0)
+		self.player = Player(self, 400 - 16*PLAYER_SCALE, 320 - 16*PLAYER_SCALE)
 	
 	def events(self):
 		for event in pygame.event.get():
