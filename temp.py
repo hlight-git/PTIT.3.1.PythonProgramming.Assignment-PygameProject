@@ -34,12 +34,13 @@ SCREEN_HEIGHT = 700
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption('2m')
 # Background
-# x = 200
-# y = 200
-# img = pygame.image.load('sprites/move/right/1.png')
-# img = pygame.transform.scale(img, (img.get_width()//5, img.get_height()//5))
-# rect = img.get_rect()
-# rect.center = (x, y)
+x = 0
+y = 0
+img = pygame.image.load('sprites/Sunnyland/artwork/Environment/back.png')
+img = pygame.transform.scale(img, (800, 700))
+rect = img.get_rect()
+rect.center = (x, y)
+screen.blit(img, (0, 0))
 # Player
 moving_sprites = pygame.sprite.Group()
 player = Player(200, 200)
@@ -47,6 +48,7 @@ moving_sprites.add(player)
 
 running = True
 while running:
+	# screen.blit(img, (0, 0))
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
 			running = False
@@ -54,7 +56,7 @@ while running:
 			moving_right = True
 			player.animate()
 	
-	screen.fill((255, 255, 255))
+	# screen.fill((255, 255, 255))
 	moving_sprites.draw(screen)
 	moving_sprites.update()
 	pygame.display.update()
