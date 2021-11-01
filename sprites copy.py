@@ -7,65 +7,27 @@ class Background(pygame.sprite.Sprite):
     def __init__(self, game, x, y):
         self.game = game
         self._layer = BACKGROUND_LAYER
-        self.groups = self.game.all_sprites, self.game.backgrounds
+        self.groups = self.game.all_sprites
         pygame.sprite.Sprite.__init__(self, self.groups)
 
         self.x = x * TILESIZE
         self.y = y * TILESIZE
-        self.width = BACKGROUND_WIDTH
-        self.height = BACKGROUND_HEIGHT
+        self.width = WIN_WIDTH
+        self.height = WIN_HEIGHT
 
-        self.image = pygame.image.load('sprites/Sunnyland/artwork/Environment/2.png')
+        self.image = pygame.image.load('sprites/Sunnyland/artwork/Environment/back.png')
         self.image = pygame.transform.scale(self.image, (self.width, self.height))
 
         self.rect = self.image.get_rect()
         self.rect.x = self.x
         self.rect.y = self.y
-        
-        self.padding = 0
-    def showing(self):
-        if self.rect.x <= - BACKGROUND_WIDTH - SCROLL_LIMIT_HORIZON:
-            return False
-        if self.rect.x >= CAM_WIDTH + SCROLL_LIMIT_HORIZON:
-            return False
-        if self.rect.y <= - BACKGROUND_HEIGHT - SCROLL_LIMIT_VERTICAL:
-            return False
-        if self.rect.y >= CAM_HEIGHT + SCROLL_LIMIT_VERTICAL:
-            return False
-        return True
-
-    def gen(self, x_gen, y_gen, note):
-        for bg in self.game.backgrounds:
-            if x_gen == bg.rect.x and y_gen == bg.rect.y:
-                return
-        # print(f'gen: {check} :', x_gen, y_gen)
-        Background(self.game, x_gen, y_gen)
-        
+    
     def update(self):
-        if not self.showing():
-            self.kill()
-            return
-        if self.rect.x < CAM_WIDTH + SCROLL_LIMIT_HORIZON - BACKGROUND_WIDTH:
-            self.gen(self.rect.x + BACKGROUND_WIDTH, self.rect.y, 'right')
-            if self.rect.y < CAM_HEIGHT + SCROLL_LIMIT_VERTICAL - BACKGROUND_HEIGHT:
-                self.gen(self.rect.x + BACKGROUND_WIDTH, self.rect.y + BACKGROUND_HEIGHT, 'right bot')
-            if self.rect.y > -SCROLL_LIMIT_VERTICAL:
-                self.gen(self.rect.x + BACKGROUND_WIDTH, self.rect.y - BACKGROUND_HEIGHT, 'right top')
-        if self.rect.x > -SCROLL_LIMIT_HORIZON:
-            self.gen(self.rect.x - BACKGROUND_WIDTH, self.rect.y, 'left')
-            if self.rect.y < CAM_HEIGHT + SCROLL_LIMIT_VERTICAL - BACKGROUND_HEIGHT:
-                self.gen(self.rect.x - BACKGROUND_WIDTH, self.rect.y + BACKGROUND_HEIGHT, 'left bot')
-            if self.rect.y > -SCROLL_LIMIT_VERTICAL:
-                self.gen(self.rect.x - BACKGROUND_WIDTH, self.rect.y - BACKGROUND_HEIGHT, 'left top')
-        if self.rect.y < CAM_HEIGHT + SCROLL_LIMIT_VERTICAL - BACKGROUND_HEIGHT:
-            self.gen(self.rect.x, self.rect.y + BACKGROUND_HEIGHT, 'bot')
-        if self.rect.y > -SCROLL_LIMIT_VERTICAL:
-            self.gen(self.rect.x, self.rect.y - BACKGROUND_HEIGHT, 'top')
-        
-        
+        pass
 
 class SpriteSheet:
     def __init__(self, file):
+        super().__init__()
         self.sheet = pygame.image.load(file).convert()
     
     def get_sprite(self, x, y, width, height):
@@ -75,10 +37,17 @@ class SpriteSheet:
         return sprite
 class Player(pygame.sprite.Sprite):
     def __init__(self, game, x, y):
+        super().__init__()
+
         self.game = game
         self._layer = PLAYER_LAYER
         self.groups = self.game.all_sprites
         pygame.sprite.Sprite.__init__(self, self.groups)
+
+        self.x = x * TILESIZE
+        self.y = y * TILESIZE
+        self.width = TILESIZE * PLAYER_SCALE
+        self.height = TILESIZE * PLAYER_SCALE
 
         self.x_change = 0
         self.y_change = 0
@@ -89,37 +58,37 @@ class Player(pygame.sprite.Sprite):
         self.center_y = 0
 
         img = pygame.image.load(f'sprites/Sunnyland/artwork/Sprites/player/idle/player-idle-1.png')
-        img = pygame.transform.scale(img, (PLAYER_WIDTH, PLAYER_HEIGHT))
+        img = pygame.transform.scale(img, (img.get_width()*PLAYER_SCALE, img.get_height()*PLAYER_SCALE))
         self.image = img
 
         self.rect = self.image.get_rect()
-        self.rect.x = x
-        self.rect.y = y
+        self.rect.x = self.x
+        self.rect.y = self.y
 
         self.idle_left = []
         for i in range(1, 7):
             img = pygame.image.load(f'sprites/Sunnyland/artwork/Sprites/player/idle/player-idle-{i}.png')
-            img = pygame.transform.scale(img, (PLAYER_WIDTH, PLAYER_HEIGHT))
+            img = pygame.transform.scale(img, (img.get_width()*PLAYER_SCALE, img.get_height()*PLAYER_SCALE))
             img = pygame.transform.flip(img, True, False)
             self.idle_left.append(img)
 
         self.idle_right = []
         for i in range(1, 7):
             img = pygame.image.load(f'sprites/Sunnyland/artwork/Sprites/player/idle/player-idle-{i}.png')
-            img = pygame.transform.scale(img, (PLAYER_WIDTH, PLAYER_HEIGHT))
+            img = pygame.transform.scale(img, (img.get_width()*PLAYER_SCALE, img.get_height()*PLAYER_SCALE))
             self.idle_right.append(img)
         
         self.move_left = []
         for i in range(1, 7):
             img = pygame.image.load(f'sprites/Sunnyland/artwork/Sprites/player/run/player-run-{i}.png')
-            img = pygame.transform.scale(img, (PLAYER_WIDTH, PLAYER_HEIGHT))
+            img = pygame.transform.scale(img, (img.get_width()*PLAYER_SCALE, img.get_height()*PLAYER_SCALE))
             img = pygame.transform.flip(img, True, False)
             self.move_left.append(img)
             
         self.move_right = []
         for i in range(1, 7):
             img = pygame.image.load(f'sprites/Sunnyland/artwork/Sprites/player/run/player-run-{i}.png')
-            img = pygame.transform.scale(img, (PLAYER_WIDTH, PLAYER_HEIGHT))
+            img = pygame.transform.scale(img, (img.get_width()*PLAYER_SCALE, img.get_height()*PLAYER_SCALE))
             self.move_right.append(img)
 
     def update(self):
@@ -131,16 +100,11 @@ class Player(pygame.sprite.Sprite):
 
         self.x_change = 0
         self.y_change = 0
-
-        self.x = self.rect.x
-        self.y = self.rect.y
-    def moving(self):
-        return self.x_change != 0 or self.y_change != 0
-            
+    
     def movement(self):
         keys = pygame.key.get_pressed()
         if keys[pygame.K_a]:
-            if self.center_x < SCROLL_LIMIT_HORIZON:
+            if self.center_x < SCROLL_LIMIT:
                 for sprite in self.game.all_sprites:
                     sprite.rect.x += SCROLL_SPEED
                 self.center_x += SCROLL_SPEED
@@ -149,7 +113,7 @@ class Player(pygame.sprite.Sprite):
             self.x_change -= PLAYER_SPEED
             self.facing = 'left'
         if keys[pygame.K_d]:
-            if -self.center_x < SCROLL_LIMIT_VERTICAL:
+            if -self.center_x < SCROLL_LIMIT:
                 for sprite in self.game.all_sprites:
                     sprite.rect.x -= SCROLL_SPEED
                 self.center_x -= SCROLL_SPEED
@@ -158,7 +122,7 @@ class Player(pygame.sprite.Sprite):
             self.x_change += PLAYER_SPEED
             self.facing = 'right'
         if keys[pygame.K_w]:
-            if self.center_y < SCROLL_LIMIT_HORIZON:
+            if self.center_y < SCROLL_LIMIT:
                 for sprite in self.game.all_sprites:
                     sprite.rect.y += SCROLL_SPEED
                 self.center_y += SCROLL_SPEED
@@ -166,14 +130,14 @@ class Player(pygame.sprite.Sprite):
                 sprite.rect.y += PLAYER_SPEED
             self.y_change -= PLAYER_SPEED
         if keys[pygame.K_s]:
-            if -self.center_y < SCROLL_LIMIT_VERTICAL:
+            if -self.center_y < SCROLL_LIMIT:
                 for sprite in self.game.all_sprites:
                     sprite.rect.y -= SCROLL_SPEED
                 self.center_y -= SCROLL_SPEED
             for sprite in self.game.all_sprites:
                 sprite.rect.y -= PLAYER_SPEED
             self.y_change += PLAYER_SPEED
-        if not self.moving():
+        if sum(keys) == 0:
             if self.center_x != 0:
                 sign = self.center_x/abs(self.center_x)
                 for sprite in self.game.all_sprites:
@@ -184,6 +148,11 @@ class Player(pygame.sprite.Sprite):
                 for sprite in self.game.all_sprites:
                     sprite.rect.y -= sign*SCROLL_SPEED
                 self.center_y -= sign*SCROLL_SPEED
+        # for sprite in self.game.all_sprites:
+        #     if sprite == self:
+        #         print(sprite.rect.x, )
+        #         # print(self.rect.y)
+        print(self.rect.x, self.rect.y)
     def animate(self):
         if self.facing == 'left':
             if self.x_change == 0 and self.y_change == 0:

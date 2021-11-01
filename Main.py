@@ -13,11 +13,13 @@ class Game:
 	def new(self):
 		self.playing = True
 		self.all_sprites = pygame.sprite.LayeredUpdates()
+		self.backgrounds = pygame.sprite.LayeredUpdates()
 		self.enemies = pygame.sprite.LayeredUpdates()
 		self.attacks = pygame.sprite.LayeredUpdates()
 
-		self.background = Background(self, 0, 0)
-		self.player = Player(self, 400 - 16*PLAYER_SCALE, 320 - 16*PLAYER_SCALE)
+		self.player = Player(self, (WIN_WIDTH - PLAYER_WIDTH)//2, (WIN_HEIGHT - PLAYER_HEIGHT)//2)
+		Background(self, (WIN_WIDTH - BACKGROUND_WIDTH)//2, (WIN_HEIGHT - BACKGROUND_HEIGHT)//2)
+		# Background(self, 0, 0)
 	
 	def events(self):
 		for event in pygame.event.get():
@@ -35,6 +37,10 @@ class Game:
 		while self.playing:
 			self.events()
 			self.update()
+			print(len(self.backgrounds))
+			# for ele in self.backgrounds:
+			# 	print(ele.rect.y, end=" ")
+			# print()
 			self.draw()
 		self.running = False
 
