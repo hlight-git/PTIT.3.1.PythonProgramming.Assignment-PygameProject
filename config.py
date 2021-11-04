@@ -17,18 +17,23 @@ BACKGROUND_WIDTH = (WIN_WIDTH + PADDING_WIDTH) // ZOOM_SCALE
 BACKGROUND_HEIGHT = (WIN_HEIGHT + PADDING_HEIGHT) // ZOOM_SCALE
 PLAYER_WIDTH = 4*WIN_WIDTH//25//ZOOM_SCALE
 PLAYER_HEIGHT = 5*WIN_HEIGHT//25//ZOOM_SCALE
+WEAPON_WIDTH = 2*PLAYER_WIDTH//3 + 30#2*WIN_WIDTH//15//ZOOM_SCALE
+WEAPON_HEIGHT = PLAYER_HEIGHT//3#5*WIN_HEIGHT//75//ZOOM_SCALE
 TILESIZE = 1
 
 PLAYER_SPEED = round(5 * GAME_SPEED)
-
+BULLET_SPEED = 15 * GAME_SPEED
 BACKGROUND_LAYER = 1
 PLAYER_LAYER = 2
 WEAPONS_LAYER = 3
 
 
 
-BASE_ATSD = round(5 / GAME_SPEED)
+BASE_ATSD = round(4 / GAME_SPEED)
 
 
 RED = (255, 0, 0)
 BLACK = (0, 0, 0)
+
+def inner_spawn(obj, cover, offset_x, offset_y):
+    return cover.rect.x + cover.width//2 - obj.width//2 + offset_x, cover.rect.y + cover.height//2 - obj.height//2 + offset_y

@@ -19,9 +19,7 @@ class Game:
 		self.backgrounds = pygame.sprite.LayeredUpdates()
 		self.enemies = pygame.sprite.LayeredUpdates()
 		self.attacks = pygame.sprite.LayeredUpdates()
-
-		Background(self, (WIN_WIDTH - BACKGROUND_WIDTH)//2, (WIN_HEIGHT - BACKGROUND_HEIGHT)//2)
-		self.player = Player(self, (WIN_WIDTH - PLAYER_WIDTH)//2, (WIN_HEIGHT - PLAYER_HEIGHT)//2)
+		self.player = Player(self, Background(self, (WIN_WIDTH - BACKGROUND_WIDTH)//2, (WIN_HEIGHT - BACKGROUND_HEIGHT)//2))
 		pygame.mouse.set_visible(self.cursor_visible)
 	
 	def events(self):
