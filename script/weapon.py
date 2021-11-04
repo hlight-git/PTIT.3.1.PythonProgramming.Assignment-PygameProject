@@ -1,2 +1,0 @@
-def tstt():
-    print('hele')

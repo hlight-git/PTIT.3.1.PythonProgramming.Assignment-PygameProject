@@ -1,5 +1,6 @@
 import pygame
 from config import *
+from script.weapons import *
 import math
 import random
 
@@ -12,11 +13,9 @@ class Background(pygame.sprite.Sprite):
 
         self.x = x * TILESIZE
         self.y = y * TILESIZE
-        self.width = BACKGROUND_WIDTH
-        self.height = BACKGROUND_HEIGHT
 
         self.image = pygame.image.load('sprites/Sunnyland/artwork/Environment/2.png')
-        self.image = pygame.transform.scale(self.image, (self.width, self.height))
+        self.image = pygame.transform.scale(self.image, (BACKGROUND_WIDTH, BACKGROUND_HEIGHT))
 
         self.rect = self.image.get_rect()
         self.rect.x = self.x
@@ -38,7 +37,7 @@ class Background(pygame.sprite.Sprite):
         for bg in self.game.backgrounds:
             if x_gen == bg.rect.x and y_gen == bg.rect.y:
                 return
-        # print(f'gen: {check} :', x_gen, y_gen)
+        # print(f'gen: {note} :', x_gen, y_gen)
         Background(self.game, x_gen, y_gen)
         
     def update(self):
@@ -74,12 +73,37 @@ class SpriteSheet:
         sprite.set_colorkey(BLACK)
         return sprite
 class Player(pygame.sprite.Sprite):
+    class ShootingTarget(pygame.sprite.Sprite):
+        def __init__(self, game, player):
+            self.player = player
+            self.game = game
+            self._layer = WEAPONS_LAYER
+            self.groups = game.all_sprites
+            pygame.sprite.Sprite.__init__(self, self.groups)
+            
+            self.radius = WIN_WIDTH // 40
+            img = pygame.image.load(f'sprites/ShootingTarget.png')
+            img = pygame.transform.scale(img, (2*self.radius, 2*self.radius))
+            self.image = img
+
+            self.rect = self.image.get_rect()
+            self.rect.x, self.rect.y = pygame.mouse.get_pos()
+
+        def get_center(self):
+            tmp = self.rect.radius // 2
+            return self.rect.x + tmp, self.rect.y + tmp
+
+        def update(self):
+            self.rect.x, self.rect.y = pygame.mouse.get_pos()
+            print(pygame.mouse.get_pos())
+
+
     def __init__(self, game, x, y):
         self.game = game
         self._layer = PLAYER_LAYER
         self.groups = self.game.all_sprites
         pygame.sprite.Sprite.__init__(self, self.groups)
-
+        
         self.x_change = 0
         self.y_change = 0
 
@@ -95,6 +119,9 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
+    
+        self.wp = Dagger(self.game, self)
+        self.aim = self.ShootingTarget(self.game, self)
 
         self.idle_left = []
         for i in range(1, 7):
@@ -188,22 +215,22 @@ class Player(pygame.sprite.Sprite):
         if self.facing == 'left':
             if self.x_change == 0 and self.y_change == 0:
                 self.image = self.idle_left[math.floor(self.animation_loop)]
-                self.animation_loop += 0.2
+                self.animation_loop += 0.2 * GAME_SPEED
                 if self.animation_loop >= len(self.idle_left):
                     self.animation_loop = 0
             else:
                 self.image = self.move_left[math.floor(self.animation_loop)]
-                self.animation_loop += 0.2
+                self.animation_loop += 0.2 * GAME_SPEED
                 if self.animation_loop >= len(self.move_left):
                     self.animation_loop = 0
         if self.facing == 'right':
             if self.x_change == 0 and self.y_change == 0:
                 self.image = self.idle_right[math.floor(self.animation_loop)]
-                self.animation_loop += 0.2
+                self.animation_loop += 0.2 * GAME_SPEED
                 if self.animation_loop >= len(self.idle_right):
                     self.animation_loop = 0
             else:
                 self.image = self.move_right[math.floor(self.animation_loop)]
-                self.animation_loop += 0.2
+                self.animation_loop += 0.2 * GAME_SPEED
                 if self.animation_loop >= len(self.move_right):
                     self.animation_loop = 0
