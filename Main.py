@@ -1,6 +1,7 @@
 import pygame
 from pygame.constants import K_p
 from config import *
+from script.enemy import Covid
 from sprites import *
 import sys
 class Game:
@@ -19,7 +20,17 @@ class Game:
 		self.backgrounds = pygame.sprite.LayeredUpdates()
 		self.enemies = pygame.sprite.LayeredUpdates()
 		self.attacks = pygame.sprite.LayeredUpdates()
-		self.player = Player(self, Background(self, (WIN_WIDTH - BACKGROUND_WIDTH)//2, (WIN_HEIGHT - BACKGROUND_HEIGHT)//2))
+		self.player = Player(self)
+		Covid(self.player, 500, 400)
+		Covid(self.player, 200, 100)
+		# Covid(self.player, 100, 400)
+		# Covid(self.player, 300, 400)
+		# Covid(self.player, 600, 400)
+		# Covid(self.player, 700, 400)
+		# Covid(self.player, 800, 400)
+		# Covid(self.player, 900, 400)
+		# Covid(self.player, 1000, 400)
+		Background(self, (WIN_WIDTH - BACKGROUND_WIDTH)//2, (WIN_HEIGHT - BACKGROUND_HEIGHT)//2)
 		pygame.mouse.set_visible(self.cursor_visible)
 	
 	def events(self):

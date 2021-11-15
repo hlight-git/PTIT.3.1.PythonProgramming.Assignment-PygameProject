@@ -11,17 +11,12 @@ class Background(pygame.sprite.Sprite):
         self.groups = self.game.all_sprites, self.game.backgrounds
         pygame.sprite.Sprite.__init__(self, self.groups)
 
-        self.x = x * TILESIZE
-        self.y = y * TILESIZE
-        self.width = BACKGROUND_WIDTH
-        self.height = BACKGROUND_HEIGHT
-
-        self.image = pygame.image.load('sprites/Sunnyland/artwork/Environment/2.png')
-        self.image = pygame.transform.scale(self.image, (self.width, self.height))
+        self.image = pygame.image.load('sprites/background/background.png')
+        self.image = pygame.transform.scale(self.image, (BACKGROUND_WIDTH, BACKGROUND_HEIGHT))
 
         self.rect = self.image.get_rect()
-        self.rect.x = self.x
-        self.rect.y = self.y
+        self.rect.x = x
+        self.rect.y = y
         
         self.padding = 0
     def showing(self):
@@ -92,31 +87,24 @@ class Player(pygame.sprite.Sprite):
             self.moving()
 
         def moving(self):
-            self.rect = pygame.mouse.get_pos()
-            self.rect = self.image.get_rect(center = self.rect)
+            self.rect.center = pygame.mouse.get_pos()
 
         def resize(self):
-            tmp = self.player.wp.unstable//2
+            tmp = 30 - self.player.weapon.accuracy//2
             if tmp <= 0:
                 self.image = self.img
             else:
                 self.image = pygame.transform.scale(self.img, (2*self.radius + tmp, 2*self.radius + tmp))
-
-        def get_center(self):
-            tmp = self.radius // 2
-            return self.rect.x + tmp, self.rect.y + tmp
 
         def update(self):
             self.moving()
             self.resize()
 
 
-    def __init__(self, game, background):
+    def __init__(self, game):
         self.game = game
         self._layer = PLAYER_LAYER
         self.groups = self.game.all_sprites
-        self.width = PLAYER_WIDTH
-        self.height = PLAYER_HEIGHT
         pygame.sprite.Sprite.__init__(self, self.groups)
         
         self.x_change = 0
@@ -126,49 +114,51 @@ class Player(pygame.sprite.Sprite):
         self.animation_loop = 0
         self.offset_x = 0
         self.offset_y = 0
+        self.speed = PLAYER_SPEED
 
         img = pygame.image.load(f'sprites/Sunnyland/artwork/Sprites/player/idle/player-idle-1.png')
-        img = pygame.transform.scale(img, (self.width, self.height))
+        img = pygame.transform.scale(img, (PLAYER_WIDTH, PLAYER_HEIGHT))
         self.image = img
+        self.mask = pygame.mask.from_surface(img)
 
         self.rect = self.image.get_rect()
-        self.rect.x, self.rect.y = inner_spawn(self, background, 0, 0)
-    
-        self.wp = ShotGun(self.game, self)
-        self.aim = self.ShootingTarget(self.game, self)
+        self.rect = self.image.get_rect(center = (WIN_WIDTH//2, WIN_HEIGHT//2))
 
         self.idle_left = []
         for i in range(1, 7):
             img = pygame.image.load(f'sprites/Sunnyland/artwork/Sprites/player/idle/player-idle-{i}.png')
-            img = pygame.transform.scale(img, (self.width, self.height))
+            img = pygame.transform.scale(img, (PLAYER_WIDTH, PLAYER_HEIGHT))
             img = pygame.transform.flip(img, True, False)
             self.idle_left.append(img)
 
         self.idle_right = []
         for i in range(1, 7):
             img = pygame.image.load(f'sprites/Sunnyland/artwork/Sprites/player/idle/player-idle-{i}.png')
-            img = pygame.transform.scale(img, (self.width, self.height))
+            img = pygame.transform.scale(img, (PLAYER_WIDTH, PLAYER_HEIGHT))
             self.idle_right.append(img)
         
         self.move_left = []
         for i in range(1, 7):
             img = pygame.image.load(f'sprites/Sunnyland/artwork/Sprites/player/run/player-run-{i}.png')
-            img = pygame.transform.scale(img, (self.width, self.height))
+            img = pygame.transform.scale(img, (PLAYER_WIDTH, PLAYER_HEIGHT))
             img = pygame.transform.flip(img, True, False)
             self.move_left.append(img)
             
         self.move_right = []
         for i in range(1, 7):
             img = pygame.image.load(f'sprites/Sunnyland/artwork/Sprites/player/run/player-run-{i}.png')
-            img = pygame.transform.scale(img, (self.width, self.height))
+            img = pygame.transform.scale(img, (PLAYER_WIDTH, PLAYER_HEIGHT))
             self.move_right.append(img)
+        
+        self.weapon = ShotGun(self.game, self)
+        # self.weapon = AK47(self.game, self)
+        self.aim = self.ShootingTarget(self.game, self)
+
     def aiming(self):
-        if pygame.mouse.get_pos()[0] >= self.get_center()[0]:
+        if pygame.mouse.get_pos()[0] >= self.rect.centerx:
             self.facing = 'right'
         else:
             self.facing = 'left'
-    def get_center(self):
-        return self.rect.x + PLAYER_WIDTH//2, self.rect.y + PLAYER_HEIGHT//2
     def update(self):
         self.aiming()
         self.movement()
@@ -180,8 +170,6 @@ class Player(pygame.sprite.Sprite):
         self.x_change = 0
         self.y_change = 0
 
-        self.x = self.rect.x
-        self.y = self.rect.y
     def moving(self):
         return self.x_change != 0 or self.y_change != 0
             
@@ -193,32 +181,32 @@ class Player(pygame.sprite.Sprite):
                     sprite.rect.x += SCROLL_SPEED
                 self.offset_x += SCROLL_SPEED
             for sprite in self.game.all_sprites:
-                sprite.rect.x += PLAYER_SPEED
-            self.x_change -= PLAYER_SPEED
+                sprite.rect.x += self.speed
+            self.x_change -= self.speed
         if keys[pygame.K_d]:
             if -self.offset_x < SCROLL_LIMIT_HORIZON:
                 for sprite in self.game.all_sprites:
                     sprite.rect.x -= SCROLL_SPEED
                 self.offset_x -= SCROLL_SPEED
             for sprite in self.game.all_sprites:
-                sprite.rect.x -= PLAYER_SPEED
-            self.x_change += PLAYER_SPEED
+                sprite.rect.x -= self.speed
+            self.x_change += self.speed
         if keys[pygame.K_w]:
             if self.offset_y < SCROLL_LIMIT_VERTICAL:
                 for sprite in self.game.all_sprites:
                     sprite.rect.y += SCROLL_SPEED
                 self.offset_y += SCROLL_SPEED
             for sprite in self.game.all_sprites:
-                sprite.rect.y += PLAYER_SPEED
-            self.y_change -= PLAYER_SPEED
+                sprite.rect.y += self.speed
+            self.y_change -= self.speed
         if keys[pygame.K_s]:
             if -self.offset_y < SCROLL_LIMIT_VERTICAL:
                 for sprite in self.game.all_sprites:
                     sprite.rect.y -= SCROLL_SPEED
                 self.offset_y -= SCROLL_SPEED
             for sprite in self.game.all_sprites:
-                sprite.rect.y -= PLAYER_SPEED
-            self.y_change += PLAYER_SPEED
+                sprite.rect.y -= self.speed
+            self.y_change += self.speed
         if self.x_change == 0 and self.offset_x != 0:
             sign = self.offset_x/abs(self.offset_x)
             for sprite in self.game.all_sprites:
@@ -233,22 +221,22 @@ class Player(pygame.sprite.Sprite):
         if self.facing == 'left':
             if self.x_change == 0 and self.y_change == 0:
                 self.image = self.idle_left[math.floor(self.animation_loop)]
-                self.animation_loop += 0.2 * GAME_SPEED
+                self.animation_loop += 0.2 * (self.speed/5)
                 if self.animation_loop >= len(self.idle_left):
                     self.animation_loop = 0
             else:
                 self.image = self.move_left[math.floor(self.animation_loop)]
-                self.animation_loop += 0.2 * GAME_SPEED
+                self.animation_loop += 0.2 * (self.speed/5)
                 if self.animation_loop >= len(self.move_left):
                     self.animation_loop = 0
         if self.facing == 'right':
             if self.x_change == 0 and self.y_change == 0:
                 self.image = self.idle_right[math.floor(self.animation_loop)]
-                self.animation_loop += 0.2 * GAME_SPEED
+                self.animation_loop += 0.2 * (self.speed/5)
                 if self.animation_loop >= len(self.idle_right):
                     self.animation_loop = 0
             else:
                 self.image = self.move_right[math.floor(self.animation_loop)]
-                self.animation_loop += 0.2 * GAME_SPEED
+                self.animation_loop += 0.2 * (self.speed/5)
                 if self.animation_loop >= len(self.move_right):
                     self.animation_loop = 0

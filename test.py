@@ -13,6 +13,5 @@ class H(F):
     def __init__(self, tqh):
         super().__init__(tqh)
     
-h = F(2)
-
-print(h.t + h.tqh)
+h = Vector2(2, 3)
+print(2 -1.0)
