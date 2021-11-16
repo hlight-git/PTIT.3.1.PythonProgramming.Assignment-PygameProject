@@ -1,9 +1,9 @@
 import pygame
 from config import *
 from script.weapons import *
-import math
+from script.enemy import *
+import os
 import random
-
 class Background(pygame.sprite.Sprite):
     def __init__(self, game, x, y):
         self.game = game
@@ -70,6 +70,102 @@ class SpriteSheet:
         sprite.set_colorkey(BLACK)
         return sprite
 class Player(pygame.sprite.Sprite):
+    class Status(pygame.sprite.Sprite):
+
+        def __init__(self, player):
+            self.player = player
+            self.max_hp = PLAYER_MAX_HEALTH
+            self.hp = self.max_hp
+            self.armor = 0
+            self.hp_bar = Player.Status.HealthBar(self)
+            self.backpack = Player.Status.Backpack(self)
+
+        def take_dame(self, amount):
+            if self.armor >= 0:
+                self.armor -= amount
+            if self.armor < 0:
+                self.hp_bar.trans_hp -= self.armor
+                self.hp += self.armor
+                self.armor = 0
+            if self.hp <= 0:
+                self.player.game.playing = False
+        class HealthBar(pygame.sprite.Sprite):
+            def __init__(self, status):
+                self.status = status
+                self.game = status.player.game
+                pygame.sprite.Sprite.__init__(self, self.status.player.game.interface)
+
+                self.bar_width = 250
+                self.bar_height = 25
+                self.trans_hp = 0
+                self.hp_change_speed = 0.2
+                self.ratio = self.status.max_hp / self.bar_width
+                
+                self.image = pygame.Surface((self.bar_width, self.bar_height))
+                self.rect = self.image.get_rect()
+                self.rect.x = 10
+                self.rect.y = 10
+
+            def update(self):
+                hp_bar_rect = pygame.Rect(0, 0, self.status.hp/self.ratio, self.bar_height)
+                
+                self.image.fill(RED)
+                pygame.draw.rect(self.image, GREEN, hp_bar_rect)
+                if self.status.armor > 0:
+                    armor_width = self.status.armor/self.ratio
+                    armor_bar_rect = pygame.Rect(hp_bar_rect.right - armor_width, 0, armor_width, self.bar_height)
+                    pygame.draw.rect(self.image, CYAN, armor_bar_rect)
+                    pygame.draw.rect(self.image, GRAY, (hp_bar_rect.right - armor_width, 0, armor_width, self.bar_height), 1)
+                if self.trans_hp > 0:
+                    self.trans_hp -= self.hp_change_speed
+                    transition_width = int(self.trans_hp/self.ratio)
+                    transition_bar_rect = pygame.Rect(hp_bar_rect.right, 0, transition_width, self.bar_height)
+                    pygame.draw.rect(self.image, YELLOW, transition_bar_rect)
+                pygame.draw.rect(self.image, BLACK, (0, 0, self.bar_width, self.bar_height), 5)
+
+        class Backpack(pygame.sprite.Sprite):
+            def __init__(self, status):
+                self.status = status
+                self.game = status.player.game
+                pygame.sprite.Sprite.__init__(self, self.status.player.game.interface)
+
+                self.image = pygame.Surface((250, 50), pygame.SRCALPHA)
+                self.rect = self.image.get_rect()
+                self.rect.x = 10
+                self.rect.y = 50
+
+                self.FONT = pygame.font.SysFont('Futura', 30)
+                self.cur_wp = 0
+                self.bullets = [[30, 60], [7, 14]]
+                self.change_weapon_sound = pygame.mixer.Sound('sprites/sounds/changeGun.wav')
+                self.weapon = None
+
+            def set_weapon(self, wp_type, adjacent):
+                if wp_type > len(self.bullets) or (self.cur_wp == wp_type - 1 and not adjacent):
+                    return
+                self.weapon.kill()
+                if adjacent:
+                    self.cur_wp += wp_type
+                    if self.cur_wp < 0:
+                        self.cur_wp = len(self.bullets) - 1
+                    if self.cur_wp >= len(self.bullets):
+                        self.cur_wp = 0
+                else:
+                    self.cur_wp = wp_type - 1
+                pygame.mixer.Channel(WEAPONS_CHANNEL).play(self.change_weapon_sound)
+                self.weapon = self.weapon_type(self.cur_wp)
+
+            def weapon_type(self, wt):
+                if wt == 0:
+                    return AK47(self.status.player)
+                if wt == 1:
+                    return ShotGun(self.status.player)
+
+            def update(self):
+                self.image.fill(EMPTY)
+                bullet_sts = self.FONT.render(f'Bullets: {self.bullets[self.cur_wp][0]}/{self.bullets[self.cur_wp][1]}', True, ORANGE)
+                self.image.blit(bullet_sts, (0, 0))
+
     class ShootingTarget(pygame.sprite.Sprite):
         def __init__(self, game, player):
             self.player = player
@@ -90,7 +186,7 @@ class Player(pygame.sprite.Sprite):
             self.rect.center = pygame.mouse.get_pos()
 
         def resize(self):
-            tmp = 30 - self.player.weapon.accuracy//2
+            tmp = 30 - self.player.status.backpack.weapon.accuracy//2
             if tmp <= 0:
                 self.image = self.img
             else:
@@ -103,79 +199,125 @@ class Player(pygame.sprite.Sprite):
 
     def __init__(self, game):
         self.game = game
+        self.alive = True
         self._layer = PLAYER_LAYER
         self.groups = self.game.all_sprites
         pygame.sprite.Sprite.__init__(self, self.groups)
-        
+        self.scale = 2.5
         self.x_change = 0
         self.y_change = 0
+        self.update_time = pygame.time.get_ticks()
 
-        self.facing = 'right'
         self.animation_loop = 0
         self.offset_x = 0
         self.offset_y = 0
         self.speed = PLAYER_SPEED
-
-        img = pygame.image.load(f'sprites/Sunnyland/artwork/Sprites/player/idle/player-idle-1.png')
-        img = pygame.transform.scale(img, (PLAYER_WIDTH, PLAYER_HEIGHT))
-        self.image = img
-        self.mask = pygame.mask.from_surface(img)
+    
+        self.animation_list = []
+        animation_types = ['Idle', 'Run', 'IdleHurt', 'RunHurt']
+        for animation in animation_types:
+            temp_list = []
+            num_of_frames = len(os.listdir(f'sprites/player/{animation}'))
+            for i in range(num_of_frames):
+                img = pygame.image.load(f'sprites/player/{animation}/{i}.png').convert_alpha()
+                img = pygame.transform.scale(img, (int(img.get_width() * self.scale), int(img.get_height() * self.scale)))
+                temp_list.append(img)
+            self.animation_list.append(temp_list)
+        self.idle_left = []
+        self.action = 0
+        self.flip = False
+        self.run_dir = 1
+        self.frame_index = 0
+        self.image = self.animation_list[self.action][self.frame_index]
+        self.mask = pygame.mask.from_surface(self.image)
 
         self.rect = self.image.get_rect()
         self.rect = self.image.get_rect(center = (WIN_WIDTH//2, WIN_HEIGHT//2))
 
-        self.idle_left = []
-        for i in range(1, 7):
-            img = pygame.image.load(f'sprites/Sunnyland/artwork/Sprites/player/idle/player-idle-{i}.png')
-            img = pygame.transform.scale(img, (PLAYER_WIDTH, PLAYER_HEIGHT))
-            img = pygame.transform.flip(img, True, False)
-            self.idle_left.append(img)
-
-        self.idle_right = []
-        for i in range(1, 7):
-            img = pygame.image.load(f'sprites/Sunnyland/artwork/Sprites/player/idle/player-idle-{i}.png')
-            img = pygame.transform.scale(img, (PLAYER_WIDTH, PLAYER_HEIGHT))
-            self.idle_right.append(img)
-        
-        self.move_left = []
-        for i in range(1, 7):
-            img = pygame.image.load(f'sprites/Sunnyland/artwork/Sprites/player/run/player-run-{i}.png')
-            img = pygame.transform.scale(img, (PLAYER_WIDTH, PLAYER_HEIGHT))
-            img = pygame.transform.flip(img, True, False)
-            self.move_left.append(img)
-            
-        self.move_right = []
-        for i in range(1, 7):
-            img = pygame.image.load(f'sprites/Sunnyland/artwork/Sprites/player/run/player-run-{i}.png')
-            img = pygame.transform.scale(img, (PLAYER_WIDTH, PLAYER_HEIGHT))
-            self.move_right.append(img)
-        
-        self.weapon = ShotGun(self.game, self)
-        # self.weapon = AK47(self.game, self)
         self.aim = self.ShootingTarget(self.game, self)
+        self.gen_cd = random.randrange(50, 100)
+        self.rand_types = []
+        for i in range(-1, 2):
+            self.rand_types += [(i, -1), (i, 1)]
+            if i != 0:
+                self.rand_types.append((i, 0))
+        self.status = Player.Status(self)
+        self.status.backpack.weapon = self.status.backpack.weapon_type(0)
 
     def aiming(self):
         if pygame.mouse.get_pos()[0] >= self.rect.centerx:
-            self.facing = 'right'
+            self.flip = False
         else:
-            self.facing = 'left'
+            self.flip = True
+
+    def set_action(self, new_action):
+        if new_action != self.action:
+            self.action = new_action
+            if self.run_dir > 0:
+                self.frame_index = 0
+            else:
+                self.frame_index = len(self.animation_list[self.action])-1
+            self.update_time = pygame.time.get_ticks()
+
+    def update_action(self):
+        if self.x_change != 0 or self.y_change != 0:
+            if self.action > 1:
+                self.set_action(3)
+            else:
+                self.set_action(1)
+        else:
+            if self.action > 1:
+                self.set_action(2)
+            else:
+                self.set_action(0)
+
+    def update_animation(self):
+        self.image = pygame.transform.flip(self.animation_list[self.action][self.frame_index], self.flip, False)
+        # print(self.action, self.frame_index)
+        if pygame.time.get_ticks() - self.update_time > ANIMATION_COOLDOWN:
+            self.update_time = pygame.time.get_ticks()
+            self.frame_index += self.run_dir
+        if self.frame_index >= len(self.animation_list[self.action]):
+            if self.action > 1:
+                self.set_action(self.action - 2)
+            else:
+                self.frame_index = 0
+        elif self.frame_index < 0:
+            if self.action > 1:
+                self.set_action(self.action - 2)
+            else:    
+                self.frame_index = len(self.animation_list[self.action]) - 1
+
+    def enemies_gen(self):
+        if self.gen_cd > 0:
+            self.gen_cd -= GAME_SPEED
+        else:
+            rt = self.rand_types[random.randint(0, 7)]
+            x = random.randrange(rt[0] * WIN_WIDTH, WIN_WIDTH + rt[0] * WIN_WIDTH) + random.randint(100, 400) * rt[0]
+            y = random.randrange(rt[1] * WIN_HEIGHT, WIN_HEIGHT + rt[1] * WIN_HEIGHT)
+            Enemy(self, x, y)
+            self.gen_cd = random.randrange(100, 200)
+
     def update(self):
         self.aiming()
-        self.movement()
-        self.animate()
+        self.update_moving()
+        self.update_action()
+        self.update_animation()
+        self.enemies_gen()
 
         self.rect.x += self.x_change
         self.rect.y += self.y_change
 
         self.x_change = 0
         self.y_change = 0
-
-    def moving(self):
-        return self.x_change != 0 or self.y_change != 0
-            
-    def movement(self):
+    
+    def update_moving(self):
         keys = pygame.key.get_pressed()
         if keys[pygame.K_a]:
+            if not self.flip:
+                self.run_dir = -1
+            else:
+                self.run_dir = 1
             if self.offset_x < SCROLL_LIMIT_HORIZON:
                 for sprite in self.game.all_sprites:
                     sprite.rect.x += SCROLL_SPEED
@@ -184,6 +326,10 @@ class Player(pygame.sprite.Sprite):
                 sprite.rect.x += self.speed
             self.x_change -= self.speed
         if keys[pygame.K_d]:
+            if self.flip:
+                self.run_dir = -1
+            else:
+                self.run_dir = 1
             if -self.offset_x < SCROLL_LIMIT_HORIZON:
                 for sprite in self.game.all_sprites:
                     sprite.rect.x -= SCROLL_SPEED
@@ -217,26 +363,3 @@ class Player(pygame.sprite.Sprite):
             for sprite in self.game.all_sprites:
                 sprite.rect.y -= sign*SCROLL_SPEED
             self.offset_y -= sign*SCROLL_SPEED
-    def animate(self):
-        if self.facing == 'left':
-            if self.x_change == 0 and self.y_change == 0:
-                self.image = self.idle_left[math.floor(self.animation_loop)]
-                self.animation_loop += 0.2 * (self.speed/5)
-                if self.animation_loop >= len(self.idle_left):
-                    self.animation_loop = 0
-            else:
-                self.image = self.move_left[math.floor(self.animation_loop)]
-                self.animation_loop += 0.2 * (self.speed/5)
-                if self.animation_loop >= len(self.move_left):
-                    self.animation_loop = 0
-        if self.facing == 'right':
-            if self.x_change == 0 and self.y_change == 0:
-                self.image = self.idle_right[math.floor(self.animation_loop)]
-                self.animation_loop += 0.2 * (self.speed/5)
-                if self.animation_loop >= len(self.idle_right):
-                    self.animation_loop = 0
-            else:
-                self.image = self.move_right[math.floor(self.animation_loop)]
-                self.animation_loop += 0.2 * (self.speed/5)
-                if self.animation_loop >= len(self.move_right):
-                    self.animation_loop = 0

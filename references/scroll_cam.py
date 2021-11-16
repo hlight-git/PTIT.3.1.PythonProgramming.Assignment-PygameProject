@@ -4,9 +4,9 @@ pygame.init()
 ###
 class Player:
     def __init__(self):
-        self.image = pygame.Surface((16,16)) # Create Player Image
-        self.image.fill(colors["RED"]) # Fill Player Red
-        self.rect = pygame.Rect((50,50),(16,16)) # Create Player Rect
+        self.image = pygame.Surface((50,50)) # Create Player Image
+        # self.image.fill(colors["RED"]) # Fill Player Red
+        self.rect = pygame.Rect(50, 50, 10, 10) # Create Player Rect
     def move(self,camera_pos):
         pos_x,pos_y = camera_pos # Split camara_pos
         #

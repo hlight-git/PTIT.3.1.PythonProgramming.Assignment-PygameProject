@@ -1,5 +1,6 @@
+import random
 from pygame import Vector2
-
+import pygame
 class F:
     def __init__(self, tqh):
         self.tqh = Vector2(1, 2)
@@ -12,6 +13,8 @@ class F:
 class H(F):
     def __init__(self, tqh):
         super().__init__(tqh)
-    
-h = Vector2(2, 3)
-print(2 -1.0)
+
+for i in range(10):
+    print(random.randint(1, 2), random.randrange(1, 2))
+
+print(pygame.K_2)

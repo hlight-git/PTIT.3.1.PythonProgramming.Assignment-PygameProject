@@ -37,7 +37,8 @@ class Point(pygame.sprite.Sprite):
 		self.rect.x = x
 		self.rect.y = y
 		self.enemy = enemy
-    
+		self.FONT = pygame.font.SysFont('Futura', 30)
+
 	def update(self):
 		if self.name == 'tqh':
 			self.rect = self.image.get_rect(center = pygame.mouse.get_pos())
@@ -45,6 +46,9 @@ class Point(pygame.sprite.Sprite):
 				self.image.fill((100, 100, 100))
 			else:
 				self.image.fill((50, 50, 50))
+		img = self.FONT.render(f'Bullets: ', True, (123,32,65))
+		self.image.blit(img, (0, 0))
+		
 		self.sc.blit(self.image, self.rect)
 
 pygame.init()
