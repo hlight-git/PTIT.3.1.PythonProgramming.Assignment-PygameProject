@@ -21,7 +21,7 @@ class Game:
 		self.attacks = pygame.sprite.LayeredUpdates()
 		self.interface = pygame.sprite.LayeredUpdates()
 		self.player = Player(self)
-		# Enemy(self.player, 500, 400)
+		Enemy(self.player, 500, 400)
 		# Enemy(self.player, 200, 450)
 		Background(self, (WIN_WIDTH - BACKGROUND_WIDTH)//2, (WIN_HEIGHT - BACKGROUND_HEIGHT)//2)
 		pygame.mouse.set_visible(self.cursor_visible)
@@ -47,11 +47,13 @@ class Game:
 	def update(self):
 		self.time_counter = pygame.time.get_ticks()
 		self.all_sprites.update()
+		self.attacks.update()
 		self.interface.update()
 
 	def draw(self):
 		self.screen.fill(BLACK)
 		self.all_sprites.draw(self.screen)
+		self.attacks.draw(self.screen)
 		self.interface.draw(self.screen)
 		self.clock.tick(FPS)
 		pygame.display.update()

@@ -5,12 +5,13 @@ import os
 import random
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, player, x, y):
-        self.name = 'enemy'
-        self.scale = random.randint(3, 3 + min(6, player.game.time_counter//10000))
+        self.name = 'zom4'
+        self.scale = random.randint(3, 3 + min(6, player.game.time_counter//10000)) * 1.2
         self.move_speed = round(ENEMY_SPEED / 5) + 1
         self.atk_speed = ENEMY_SPEED*30
         self.max_hp = 50*self.scale
         self.hp = self.max_hp
+        print(self.max_hp)
 
         self.player = player
         self.alive = True
@@ -20,7 +21,7 @@ class Enemy(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self, self.groups)
 
         self.animation_list = []
-        animation_types = ['Idle', 'Run', 'Attack', 'Dead', 'Hurt']
+        animation_types = ['Idle', 'Run', 'Attack', 'Death', 'Hurt']
         for animation in animation_types:
             temp_list = []
             num_of_frames = len(os.listdir(f'sprites/enemies/{self.name}/{animation}'))

@@ -75,10 +75,10 @@ class Player(pygame.sprite.Sprite):
             self.rect.x = 10
             self.rect.y = 50
             self.weapons = []
-            self.weapons.append(Icon(self.player.game, 'sprites/Weapons/Icon/AR/AK47.png', self.image, self.rect.bottomleft))
-            self.weapons.append(Icon(self.player.game, 'sprites/Weapons/Icon/Shotgun/0.png', self.image, (self.rect.x + 80, self.rect.bottom)))
-            self.weapons.append(Icon(self.player.game, 'sprites/Weapons/Icon/AR/M416.png', self.image, (self.rect.x + 160, self.rect.bottom)))
-            self.weapons.append(Icon(self.player.game, 'sprites/Weapons/Icon/Pistol/DE.png', self.image, (self.rect.x + 240, self.rect.bottom)))
+            self.weapons.append(Icon(self.player.game, 'sprites/weapons/Icon/Pistol/DE.png', self.image, self.rect.bottomleft))
+            self.weapons.append(Icon(self.player.game, 'sprites/weapons/Icon/AR/AK47.png', self.image, (self.rect.x + 80, self.rect.bottom)))
+            self.weapons.append(Icon(self.player.game, 'sprites/weapons/Icon/AR/M416.png', self.image, (self.rect.x + 160, self.rect.bottom)))
+            self.weapons.append(Icon(self.player.game, 'sprites/weapons/Icon/Shotgun/0.png', self.image, (self.rect.x + 240, self.rect.bottom)))
             self.cur_wp = self.backpack.cur_wp
             self.weapons[self.cur_wp].image.set_alpha(255)
 
@@ -117,8 +117,8 @@ class Player(pygame.sprite.Sprite):
             def update(self):
                 hp_bar_rect = pygame.Rect(0, 0, self.status.hp/self.ratio, self.bar_height)
                 
-                self.image.fill(RED)
-                pygame.draw.rect(self.image, GREEN, hp_bar_rect)
+                self.image.fill(GRAY)
+                pygame.draw.rect(self.image, RED, hp_bar_rect)
                 if self.status.armor > 0:
                     armor_width = self.status.armor/self.ratio
                     armor_bar_rect = pygame.Rect(hp_bar_rect.right - armor_width, 0, armor_width, self.bar_height)
@@ -145,7 +145,7 @@ class Player(pygame.sprite.Sprite):
                 self.FONT = pygame.font.SysFont('Futura', 30)
                 self.cur_wp = 0
                 self.weapon = None
-                self.bullets = [[30, 60], [7, 14]]
+                self.bullets = [[12, 30], [30, 60], [40, 75], [7, 14]]
                 self.change_weapon_sound = pygame.mixer.Sound('sprites/sounds/changeGun.wav')
 
             def set_weapon(self, wp_type, adjacent):
@@ -165,8 +165,12 @@ class Player(pygame.sprite.Sprite):
 
             def weapon_type(self, wt):
                 if wt == 0:
-                    return AK47(self.status.player)
+                    return Pistol(self.status.player)
                 if wt == 1:
+                    return AK47(self.status.player)
+                if wt == 2:
+                    return M416(self.status.player)
+                if wt == 3:
                     return ShotGun(self.status.player)
 
             def update(self):
