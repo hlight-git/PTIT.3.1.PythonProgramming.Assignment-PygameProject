@@ -14,6 +14,16 @@ class Weapon(ABC):
         self.owner = owner
         self.backpack = owner.status.backpack
         
+        self.animation_list = []
+        # animation_types = ['Idle', 'Attack', 'Reload']
+        # for animation in animation_types:
+        #     temp_list = []
+        #     num_of_frames = len(os.listdir(f'sprites/enemies/{self.name}/{animation}'))
+        #     for i in range(num_of_frames):
+        #         img = pygame.image.load(f'sprites/enemies/{self.name}/{animation}/{i}.png').convert_alpha()
+        #         img = pygame.transform.scale(img, (int(img.get_width() * self.scale), int(img.get_height() * self.scale)))
+        #         temp_list.append(img)
+        #     self.animation_list.append(temp_list)
         self.right = pygame.transform.scale(self.idle_img, (self.width, self.height))
         self.left = pygame.transform.flip(self.right, True, False)
         self.atk_right = pygame.transform.scale(self.atk_img, (self.width, self.height))
@@ -65,7 +75,7 @@ class Guns(Weapon):
                 else:
                     pygame.mixer.Channel(WEAPONS_CHANNEL).play(self.reload_sound[1])
                     self.reloading = False
-                    self.owner.speed *= 2
+                    self.owner.speed = PLAYER_SPEED
         if self.name == 'AR':
             if not pygame.mixer.Channel(WEAPONS_CHANNEL).get_busy():
                 if self.backpack.bullets[self.backpack.cur_wp][0] < self.cap_mgz:
@@ -75,7 +85,7 @@ class Guns(Weapon):
                         self.backpack.bullets[self.backpack.cur_wp][1] -= change
                         self.backpack.bullets[self.backpack.cur_wp][0] += change
                 self.reloading = False
-                self.owner.speed *= 2
+                self.owner.speed = PLAYER_SPEED
 
     def shoot(self):
         self.atks.append(self.Attack(self))
@@ -90,7 +100,7 @@ class Guns(Weapon):
     def attack(self):
         if self.reloading:
             self.reloading = False
-            self.owner.speed *= 2
+            self.owner.speed = PLAYER_SPEED
         if self.accuracy > 0:
             self.accuracy -= self.unstable
         self.shoot()
@@ -136,7 +146,7 @@ class Guns(Weapon):
             self.reload()
         elif pygame.key.get_pressed()[pygame.K_r]:
             self.reloading = True
-            self.owner.speed /= 2
+            self.owner.speed //= 2
         mouse_control = pygame.mouse.get_pressed()            
         if mouse_control[0]:
             if self.attack_cd < 0 and self.backpack.bullets[self.backpack.cur_wp][0] > 0:
@@ -214,9 +224,9 @@ class AR(Guns, pygame.sprite.Sprite):
 
 class AK47(AR):
     def __init__(self, owner):
-        self.idle_img = pygame.image.load('sprites/s/Weapons/gun/shotgun/sg0.png')#.convert()
-        self.atk_img = pygame.image.load('sprites/s/Weapons/gun/shotgun/sg2.png')#.convert()
-        self.reload_img = pygame.image.load('sprites/s/Weapons/gun/shotgun/sgr.png')
+        self.idle_img = pygame.image.load('sprites/Weapons/Shotgun/Idle/0.png')#.convert()
+        self.atk_img = pygame.image.load('sprites/Weapons/Shotgun/Shoot/0.png')#.convert()
+        self.reload_img = pygame.image.load('sprites/Weapons/Shotgun/Reload/1.png')
         self.bullet_img = pygame.image.load('sprites/bullet2.png')
         self.shoot_sound = pygame.mixer.Sound('sprites/sounds/shoot/ak47.wav')
         self.reload_sound = (pygame.mixer.Sound('sprites/sounds/reload/shotgun.mp3'), pygame.mixer.Sound('sprites/sounds/reload/shotgun_done.mp3'))

@@ -14,7 +14,4 @@ class H(F):
     def __init__(self, tqh):
         super().__init__(tqh)
 
-for i in range(10):
-    print(random.randint(1, 2), random.randrange(1, 2))
-
-print(pygame.K_2)
+# print(pygame.transform.rotate(Vector2()))

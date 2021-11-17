@@ -1,6 +1,5 @@
 import pygame
 from config import *
-from script.enemy import Enemy
 from sprites import *
 import sys
 class Game:

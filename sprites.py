@@ -2,6 +2,7 @@ import pygame
 from config import *
 from script.weapons import *
 from script.enemy import *
+from script.items import *
 import os
 import random
 class Background(pygame.sprite.Sprite):
@@ -58,17 +59,6 @@ class Background(pygame.sprite.Sprite):
         if self.rect.y > -SCROLL_LIMIT_VERTICAL:
             self.gen(self.rect.x, self.rect.y - BACKGROUND_HEIGHT, 'top')
         
-        
-
-class SpriteSheet:
-    def __init__(self, file):
-        self.sheet = pygame.image.load(file)
-    
-    def get_sprite(self, x, y, width, height):
-        sprite = pygame.Surface([width, height])
-        sprite.blit(self.sheet, (0, 0), (x, y, width, height))
-        sprite.set_colorkey(BLACK)
-        return sprite
 class Player(pygame.sprite.Sprite):
     class Status(pygame.sprite.Sprite):
 
@@ -79,7 +69,25 @@ class Player(pygame.sprite.Sprite):
             self.armor = 0
             self.hp_bar = Player.Status.HealthBar(self)
             self.backpack = Player.Status.Backpack(self)
+            pygame.sprite.Sprite.__init__(self, player.game.interface)
+            self.image = pygame.Surface((320, 80), pygame.SRCALPHA)
+            self.rect = self.image.get_rect()
+            self.rect.x = 10
+            self.rect.y = 50
+            self.weapons = []
+            self.weapons.append(Icon(self.player.game, 'sprites/Weapons/Icon/AR/AK47.png', self.image, self.rect.bottomleft))
+            self.weapons.append(Icon(self.player.game, 'sprites/Weapons/Icon/Shotgun/0.png', self.image, (self.rect.x + 80, self.rect.bottom)))
+            self.weapons.append(Icon(self.player.game, 'sprites/Weapons/Icon/AR/M416.png', self.image, (self.rect.x + 160, self.rect.bottom)))
+            self.weapons.append(Icon(self.player.game, 'sprites/Weapons/Icon/Pistol/DE.png', self.image, (self.rect.x + 240, self.rect.bottom)))
+            self.cur_wp = self.backpack.cur_wp
+            self.weapons[self.cur_wp].image.set_alpha(255)
 
+        def update(self):
+            if self.cur_wp != self.backpack.cur_wp:
+                self.weapons[self.cur_wp].image.set_alpha(100)
+                self.cur_wp = self.backpack.cur_wp
+                self.weapons[self.cur_wp].image.set_alpha(255)
+        
         def take_dame(self, amount):
             if self.armor >= 0:
                 self.armor -= amount
@@ -132,13 +140,13 @@ class Player(pygame.sprite.Sprite):
                 self.image = pygame.Surface((250, 50), pygame.SRCALPHA)
                 self.rect = self.image.get_rect()
                 self.rect.x = 10
-                self.rect.y = 50
+                self.rect.y = 40
 
                 self.FONT = pygame.font.SysFont('Futura', 30)
                 self.cur_wp = 0
+                self.weapon = None
                 self.bullets = [[30, 60], [7, 14]]
                 self.change_weapon_sound = pygame.mixer.Sound('sprites/sounds/changeGun.wav')
-                self.weapon = None
 
             def set_weapon(self, wp_type, adjacent):
                 if wp_type > len(self.bullets) or (self.cur_wp == wp_type - 1 and not adjacent):
@@ -273,7 +281,6 @@ class Player(pygame.sprite.Sprite):
 
     def update_animation(self):
         self.image = pygame.transform.flip(self.animation_list[self.action][self.frame_index], self.flip, False)
-        # print(self.action, self.frame_index)
         if pygame.time.get_ticks() - self.update_time > ANIMATION_COOLDOWN:
             self.update_time = pygame.time.get_ticks()
             self.frame_index += self.run_dir

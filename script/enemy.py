@@ -1,7 +1,6 @@
 import pygame
-from pygame.display import update
 from config import *
-from abc import ABC, abstractclassmethod
+# from abc import ABC, abstractclassmethod
 import os
 import random
 class Enemy(pygame.sprite.Sprite):
