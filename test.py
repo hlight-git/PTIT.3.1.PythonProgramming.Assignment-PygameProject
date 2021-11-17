@@ -14,6 +14,7 @@ x = wtf()
 y = copy.deepcopy(x)
 x.vl.xxx -=1 
 print(x.vl.xxx, y.vl.xxx)
+print('0'+1)
 # for virus in ['blue-rim-light', 'classic', 'green', 'red-rim-light']:
 #     os.mkdir('sprites/enemies/' + virus)
 #     for file_name in os.listdir(virus):

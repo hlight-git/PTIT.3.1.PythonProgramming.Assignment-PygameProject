@@ -1,6 +1,6 @@
 import pygame
 from config import *
-from sprites import *
+from script.sprites import *
 import sys
 class Game:
 	def __init__(self):
@@ -12,7 +12,7 @@ class Game:
 
 	def new(self):
 		self.playing = True
-		self.pause = False
+		self.pausing = False
 		self.cursor_visible = False
 		self.time_counter = pygame.time.get_ticks()
 		self.all_sprites = pygame.sprite.LayeredUpdates()
@@ -21,8 +21,6 @@ class Game:
 		self.attacks = pygame.sprite.LayeredUpdates()
 		self.interface = pygame.sprite.LayeredUpdates()
 		self.player = Player(self)
-		Enemy(self.player, 500, 400)
-		# Enemy(self.player, 200, 450)
 		Background(self, (WIN_WIDTH - BACKGROUND_WIDTH)//2, (WIN_HEIGHT - BACKGROUND_HEIGHT)//2)
 		pygame.mouse.set_visible(self.cursor_visible)
 	
@@ -33,7 +31,7 @@ class Game:
 				self.running = False
 			if event.type == pygame.KEYDOWN:
 				if event.key == pygame.K_p:
-					self.pause = not self.pause
+					self.pausing = not self.pausing
 					self.cursor_visible = not self.cursor_visible
 					pygame.mouse.set_visible(self.cursor_visible)
 				if pygame.K_1 <= event.key <= pygame.K_9:
@@ -57,15 +55,18 @@ class Game:
 		self.interface.draw(self.screen)
 		self.clock.tick(FPS)
 		pygame.display.update()
+	
+	def win(self):
+		self.pausing = True
+		
+	def lose(self):
+		self.playing = False
+
 	def main(self):
 		while self.playing:
 			self.events()
-			if not self.pause:
+			if not self.pausing:
 				self.update()
-				# print(len(self.backgrounds))
-				# print(pygame.time.get_ticks())
-				# for ele in self.enemies:
-				# 	print(ele)
 			self.draw()
 		self.running = False
 

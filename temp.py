@@ -1,6 +1,8 @@
 import pygame
 import copy
 import time
+
+from config import *
 # class Player(pygame.sprite.Sprite):
 # 	def __init__(self, pos_x, pos_y):
 # 		super().__init__()
@@ -30,8 +32,8 @@ class Point(pygame.sprite.Sprite):
 	def __init__(self, sc, x, y, color, name, enemy):
 		self.name = name
 		self.sc = sc
-		self.image = pygame.image.load('sprites\enemies\\blue-rim-light\Attack\\0.png').convert_alpha()
-		# self.image.fill(color)
+		self.image = pygame.Surface((50, 50))
+		self.image.fill(RED)
 		self.mask = pygame.mask.from_surface(self.image)
 		self.rect = self.image.get_rect()
 		self.rect.x = x
@@ -71,8 +73,13 @@ player.active = False
 
 tm = time.time()
 p = []
-for i in range(100):
+for i in range(5):
 	p.append(copy.copy(player))#Point(screen, 0, 0, (255, 0, 0), 'tqh', enemy))
+	# p[0].active = True
+	# p[i].image.fill((20*i, 20*i, 20*i))
+	# for j in range(i):
+	# 	p[i].rect.x += 50
+	# 	p[i].rect.y += 50
 print(len(p))
 tm2 = time.time()
 print(tm2 - tm)
@@ -84,10 +91,15 @@ while running:
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
 			running = False
-	# screen.fill((255, 255, 255))
+	screen.fill((255, 255, 255))
 	# moving_sprites.draw(screen)
 	# moving_sprites.update()
-	enemy.update()
+	p[0].update()
+	p[1].update()
+	p[2].update()
+	p[3].update()
+	p[4].update()
+	# enemy.update()
 	player.update()
 	pygame.display.update()
 	clock.tick(60)

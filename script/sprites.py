@@ -31,11 +31,10 @@ class Background(pygame.sprite.Sprite):
             return False
         return True
 
-    def gen(self, x_gen, y_gen, note):
+    def gen(self, x_gen, y_gen):
         for bg in self.game.backgrounds:
             if x_gen == bg.rect.x and y_gen == bg.rect.y:
                 return
-        # print(f'gen: {note} :', x_gen, y_gen)
         Background(self.game, x_gen, y_gen)
         
     def update(self):
@@ -43,21 +42,21 @@ class Background(pygame.sprite.Sprite):
             self.kill()
             return
         if self.rect.x < CAM_WIDTH + SCROLL_LIMIT_HORIZON - BACKGROUND_WIDTH:
-            self.gen(self.rect.x + BACKGROUND_WIDTH, self.rect.y, 'right')
+            self.gen(self.rect.x + BACKGROUND_WIDTH, self.rect.y)
             if self.rect.y < CAM_HEIGHT + SCROLL_LIMIT_VERTICAL - BACKGROUND_HEIGHT:
-                self.gen(self.rect.x + BACKGROUND_WIDTH, self.rect.y + BACKGROUND_HEIGHT, 'right bot')
+                self.gen(self.rect.x + BACKGROUND_WIDTH, self.rect.y + BACKGROUND_HEIGHT)
             if self.rect.y > -SCROLL_LIMIT_VERTICAL:
-                self.gen(self.rect.x + BACKGROUND_WIDTH, self.rect.y - BACKGROUND_HEIGHT, 'right top')
+                self.gen(self.rect.x + BACKGROUND_WIDTH, self.rect.y - BACKGROUND_HEIGHT)
         if self.rect.x > -SCROLL_LIMIT_HORIZON:
-            self.gen(self.rect.x - BACKGROUND_WIDTH, self.rect.y, 'left')
+            self.gen(self.rect.x - BACKGROUND_WIDTH, self.rect.y)
             if self.rect.y < CAM_HEIGHT + SCROLL_LIMIT_VERTICAL - BACKGROUND_HEIGHT:
-                self.gen(self.rect.x - BACKGROUND_WIDTH, self.rect.y + BACKGROUND_HEIGHT, 'left bot')
+                self.gen(self.rect.x - BACKGROUND_WIDTH, self.rect.y + BACKGROUND_HEIGHT)
             if self.rect.y > -SCROLL_LIMIT_VERTICAL:
-                self.gen(self.rect.x - BACKGROUND_WIDTH, self.rect.y - BACKGROUND_HEIGHT, 'left top')
+                self.gen(self.rect.x - BACKGROUND_WIDTH, self.rect.y - BACKGROUND_HEIGHT)
         if self.rect.y < CAM_HEIGHT + SCROLL_LIMIT_VERTICAL - BACKGROUND_HEIGHT:
-            self.gen(self.rect.x, self.rect.y + BACKGROUND_HEIGHT, 'bot')
+            self.gen(self.rect.x, self.rect.y + BACKGROUND_HEIGHT)
         if self.rect.y > -SCROLL_LIMIT_VERTICAL:
-            self.gen(self.rect.x, self.rect.y - BACKGROUND_HEIGHT, 'top')
+            self.gen(self.rect.x, self.rect.y - BACKGROUND_HEIGHT)
         
 class Player(pygame.sprite.Sprite):
     class Status(pygame.sprite.Sprite):
@@ -66,14 +65,16 @@ class Player(pygame.sprite.Sprite):
             self.player = player
             self.max_hp = PLAYER_MAX_HEALTH
             self.hp = self.max_hp
-            self.armor = 0
+            self.armor = self.max_hp
             self.hp_bar = Player.Status.HealthBar(self)
             self.backpack = Player.Status.Backpack(self)
+            self.countdown = Player.Status.Countdown(self)
             pygame.sprite.Sprite.__init__(self, player.game.interface)
             self.image = pygame.Surface((320, 80), pygame.SRCALPHA)
             self.rect = self.image.get_rect()
             self.rect.x = 10
             self.rect.y = 50
+            
             self.weapons = []
             self.weapons.append(Icon(self.player.game, 'sprites/weapons/Icon/Pistol/DE.png', self.image, self.rect.bottomleft))
             self.weapons.append(Icon(self.player.game, 'sprites/weapons/Icon/AR/AK47.png', self.image, (self.rect.x + 80, self.rect.bottom)))
@@ -96,7 +97,53 @@ class Player(pygame.sprite.Sprite):
                 self.hp += self.armor
                 self.armor = 0
             if self.hp <= 0:
-                self.player.game.playing = False
+                self.player.game.lose()
+        class Countdown(pygame.sprite.Sprite):
+            def __init__(self, status):
+                self.status = status
+                pygame.sprite.Sprite.__init__(self, self.status.player.game.interface)
+                self.start = pygame.time.get_ticks()
+                self.last = self.start
+                self.minute = 1
+                self.second = 0
+                self.time_up = False
+                self.font = pygame.font.SysFont('Futura', 40)
+                self.color = GREEN
+
+                self.image = pygame.Surface((150, 70), pygame.SRCALPHA)
+                self.rect = self.image.get_rect(centerx = WIN_WIDTH//2)
+
+            def std_unit(self, unit):
+                if unit < 10:
+                    return f'0{unit}'
+                return unit
+
+            def update_time(self):
+                self.second -= 1
+                if self.second == -1:
+                    self.second = 59
+                    self.minute -= 1
+                self.update_status()
+
+            def update_status(self):
+                if self.minute == 0:
+                    if self.second <= 30:
+                        self.color = YELLOW
+                    if self.second <= 10:
+                        self.font = pygame.font.SysFont('Futura', 60)
+                        self.color = RED
+                    if self.second == 0:
+                        self.time_up = True
+
+            def update(self):
+                cur = pygame.time.get_ticks()
+                if not self.time_up:
+                    if cur - self.last >= 1000:
+                        self.last = pygame.time.get_ticks()
+                        self.update_time()
+                self.image.fill(EMPTY)
+                curent_time = self.font.render(f'{self.std_unit(self.minute)}{":" if (cur//1000)%2 == 0 else " "}{self.std_unit(self.second)}', True, self.color)
+                self.image.blit(curent_time, curent_time.get_rect(center = (75, 35)))
         class HealthBar(pygame.sprite.Sprite):
             def __init__(self, status):
                 self.status = status
@@ -118,12 +165,12 @@ class Player(pygame.sprite.Sprite):
                 hp_bar_rect = pygame.Rect(0, 0, self.status.hp/self.ratio, self.bar_height)
                 
                 self.image.fill(GRAY)
-                pygame.draw.rect(self.image, RED, hp_bar_rect)
+                pygame.draw.rect(self.image, DARKGREEN, hp_bar_rect)
                 if self.status.armor > 0:
                     armor_width = self.status.armor/self.ratio
                     armor_bar_rect = pygame.Rect(hp_bar_rect.right - armor_width, 0, armor_width, self.bar_height)
                     pygame.draw.rect(self.image, CYAN, armor_bar_rect)
-                    pygame.draw.rect(self.image, GRAY, (hp_bar_rect.right - armor_width, 0, armor_width, self.bar_height), 1)
+                    pygame.draw.rect(self.image, RED, (hp_bar_rect.right - armor_width, 0, armor_width, self.bar_height), 1)
                 if self.trans_hp > 0:
                     self.trans_hp -= self.hp_change_speed
                     transition_width = int(self.trans_hp/self.ratio)
@@ -141,11 +188,11 @@ class Player(pygame.sprite.Sprite):
                 self.rect = self.image.get_rect()
                 self.rect.x = 10
                 self.rect.y = 40
-
                 self.FONT = pygame.font.SysFont('Futura', 30)
+
                 self.cur_wp = 0
                 self.weapon = None
-                self.bullets = [[12, 30], [30, 60], [40, 75], [7, 14]]
+                self.bullets = [[12, 60], [30, 120], [30, 75], [7, 14]]
                 self.change_weapon_sound = pygame.mixer.Sound('sprites/sounds/changeGun.wav')
 
             def set_weapon(self, wp_type, adjacent):
@@ -247,7 +294,7 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center = (WIN_WIDTH//2, WIN_HEIGHT//2))
 
         self.aim = self.ShootingTarget(self.game, self)
-        self.gen_cd = random.randrange(50, 100)
+        self.gen_cd = 0
         self.rand_types = []
         for i in range(-1, 2):
             self.rand_types += [(i, -1), (i, 1)]
@@ -255,6 +302,7 @@ class Player(pygame.sprite.Sprite):
                 self.rand_types.append((i, 0))
         self.status = Player.Status(self)
         self.status.backpack.weapon = self.status.backpack.weapon_type(0)
+        self.in_dead_time = False
 
     def aiming(self):
         if pygame.mouse.get_pos()[0] >= self.rect.centerx:
@@ -304,17 +352,32 @@ class Player(pygame.sprite.Sprite):
             self.gen_cd -= GAME_SPEED
         else:
             rt = self.rand_types[random.randint(0, 7)]
-            x = random.randrange(rt[0] * WIN_WIDTH, WIN_WIDTH + rt[0] * WIN_WIDTH) + random.randint(100, 400) * rt[0]
+            x = random.randrange(rt[0] * WIN_WIDTH, WIN_WIDTH + rt[0] * WIN_WIDTH)
             y = random.randrange(rt[1] * WIN_HEIGHT, WIN_HEIGHT + rt[1] * WIN_HEIGHT)
-            Enemy(self, x, y)
-            self.gen_cd = random.randrange(100, 200)
+            self.gen_cd = random.randrange(ENEMY_GEN_COOLDOWN, ENEMY_GEN_COOLDOWN*2)
+            Enemy(self, x, y, 1)
 
+    def overpopulation(self):
+        self.in_dead_time = True
+        for i in range(20):
+            rt = self.rand_types[random.randint(0, 7)]
+            x = random.randrange(rt[0] * WIN_WIDTH, WIN_WIDTH + rt[0] * WIN_WIDTH)
+            y = random.randrange(rt[1] * WIN_HEIGHT, WIN_HEIGHT + rt[1] * WIN_HEIGHT)
+            Enemy(self, x, y, 1.2)
+        
     def update(self):
         self.aiming()
         self.update_moving()
         self.update_action()
         self.update_animation()
-        self.enemies_gen()
+        if self.status.countdown.time_up:
+            if self.in_dead_time:
+                if len(self.game.enemies) == 0:
+                    self.game.win()
+            else:
+                self.overpopulation()
+        else:
+            self.enemies_gen()
 
         self.rect.x += self.x_change
         self.rect.y += self.y_change

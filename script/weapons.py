@@ -65,10 +65,6 @@ class Point(pygame.sprite.Sprite):
         self.rect = obj.rect
         self.rect.x = x
         self.rect.y = y
-    
-    # def update(self):
-    #     v = (Vector2(pygame.mouse.get_pos()) - Vector2(self.obj.rect.center)).normalize() * self.obj.R
-    #     self.rect = self.image.get_rect(center = (self.obj.rect.center + v))
 class Guns(Weapon):
     def __init__(self, owner):
         self.accuracy = 60
@@ -227,19 +223,6 @@ class Guns(Weapon):
                 self.longevity -= 0.1
                 self.cur_dis += self.step
                 self.rect = self.image.get_rect(center = (self.cur_dis + self.src))
-
-# class Dagger(Weapon, pygame.sprite.Sprite):
-#     def __init__(self, game, owner):
-#         self.idle_img = pygame.image.load(f'C:/Users/ADMIN/Desktop/2m/sprites/file deg game 2M/Weapons/Artboard 1.png')
-#         self.rect = self.image.get_rect()
-#         Weapon.__init__(self, game, owner)
-#         self.name = 'Dagger'
-#         self.aspd = 1
-#         self.attack_cd = BASE_ATSD * self.aspd
-        
-#     def attack(self, damage):
-#         return super().attack(damage)
-        
 class Pistol(Guns, pygame.sprite.Sprite):
     def __init__(self, owner):
         self.name = 'Pistol'
@@ -253,7 +236,7 @@ class Pistol(Guns, pygame.sprite.Sprite):
         self.height = WEAPON_HEIGHT
         self.R = self.width//2
         self.unstable = 8
-        self.damage = 20
+        self.damage = 30
         self.range = 50
         self.cap_mgz = 12
         self.bullet_speed = BULLET_SPEED
@@ -279,7 +262,7 @@ class AK47(AR):
         self.height = WEAPON_HEIGHT
         self.R = self.width//2
         self.unstable = 20
-        self.damage = 25
+        self.damage = 20
         self.range = 50
         self.cap_mgz = 30
         self.bullet_speed = BULLET_SPEED
@@ -301,7 +284,7 @@ class M416(AR):
         self.height = WEAPON_HEIGHT
         self.R = self.width//2
         self.unstable = 15
-        self.damage = 30
+        self.damage = 15
         self.range = 50
         self.cap_mgz = 30
         self.bullet_speed = BULLET_SPEED
@@ -321,7 +304,7 @@ class ShotGun(Guns, pygame.sprite.Sprite):
         self.height = WEAPON_HEIGHT
         self.R = self.width//2
         self.unstable = 30
-        self.damage = 50
+        self.damage = 70
         self.range = 0.4
         self.cap_mgz = 7
         self.bullet_speed = BULLET_SPEED*5

@@ -1,17 +1,16 @@
 import pygame
 from config import *
-# from abc import ABC, abstractclassmethod
 import os
 import random
+
 class Enemy(pygame.sprite.Sprite):
-    def __init__(self, player, x, y):
-        self.name = 'zom4'
-        self.scale = random.randint(3, 3 + min(6, player.game.time_counter//10000)) * 1.2
-        self.move_speed = round(ENEMY_SPEED / 5) + 1
-        self.atk_speed = ENEMY_SPEED*30
+    def __init__(self, player, x, y, scale):
+        self.name = f'zom{random.randint(2, 4)}'
+        self.scale = random.randint(3, 3 + min(6, player.game.time_counter//10000)) * scale
+        self.move_speed = int((round(ENEMY_SPEED / 5) + 1) * scale)
+        self.atk_speed = round(ENEMY_SPEED*30*scale)
         self.max_hp = 50*self.scale
         self.hp = self.max_hp
-        print(self.max_hp)
 
         self.player = player
         self.alive = True
@@ -127,11 +126,3 @@ class Enemy(pygame.sprite.Sprite):
         self.update_animation()
         if self.atk_cd > 0:
             self.atk_cd -= GAME_SPEED
-
-
-# class Covid(Enemy, pygame.sprite.Sprite):
-#     def __init__(self, player, x, y):
-        
-#         Enemy.__init__(self, player, x, y)
-#     # def attack(self):
-#     #     return super().attack()
